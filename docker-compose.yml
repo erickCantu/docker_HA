@@ -1,0 +1,141 @@
+version: '3.9'
+
+services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/portainer:/data
+    ports:
+      - "9000:9000"
+      - "9443:9443"
+    environment:
+      - TZ=Europe/Berlin
+
+  homeassistant:
+    container_name: homeassistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    volumes:
+      - /opt/homeassistant/config:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+    restart: unless-stopped
+    privileged: true
+    network_mode: host
+    depends_on:
+      - mariadb
+      - zigbee2mqtt
+      - tasmoadmin
+    
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto
+    restart: unless-stopped
+    volumes:
+      - /opt/mosquitto:/mosquitto
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    network_mode: host
+
+  zigbee2mqtt:
+    container_name: zigbee2mqtt
+    image: koenkk/zigbee2mqtt
+    restart: unless-stopped
+    volumes:
+      - /opt/zigbee2mqtt/data:/app/data
+      - /run/udev:/run/udev:ro
+    ports:
+      # Frontend port
+      - "8080:8080"
+    environment:
+      - TZ=Europe/Berlin
+    devices:
+      # Make sure this matched your adapter location
+      - /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_3cb1d8c43998ec119cb6a3d044d80d13-if00-port0:/dev/ttyACM0
+    depends_on:
+      - mosquitto  
+    
+  tasmoadmin:
+    container_name: tasmoadmin
+    image: ghcr.io/tasmoadmin/tasmoadmin:latest
+    hostname: tasmoadmin
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /opt/tasmoadmin/data:/data
+    ports:
+      - 9541:9541
+  
+  mariadb:
+    container_name: mariadb
+    image: mariadb/server:latest
+    restart: unless-stopped
+    env_file:
+      - mariadb.env
+    volumes:
+      - /opt/mariadb:/var/lib/mysql
+    ports:
+      - "3306:3306"
+  
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin:latest
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      - PMA_ARBITRARY=1
+      - UPLOAD_LIMIT=600M
+      - MEMORY_LIMIT=1G
+    # env_file:
+    #   - phpmyadmin.env
+
+  duplicati:
+    image: lscr.io/linuxserver/duplicati:latest
+    container_name: duplicati
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Europe/Berlin
+    volumes:
+      - /opt/duplicati/config:/config
+      - /opt/duplicati/backups:/backups
+      - /opt:/source
+    ports:
+      - 8200:8200
+    restart: unless-stopped
+    depends_on:
+      - homeassistant
+
+  node-red:
+    image: nodered/node-red
+    container_name: node-red
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+    volumes:
+      - /opt/nodered/data:/data
+    ports:
+      - 1880:1880
+    restart: unless-stopped
+    depends_on:
+      - homeassistant
+
+  esphome:
+    image: esphome/esphome
+    volumes:
+      - /opt/homeassistant/config/esphome:/config:rw
+      - /etc/localtime:/etc/localtime:ro
+    network_mode: host
+    restart: unless-stopped
+    ports:
+      - 6052:6052
+    depends_on:
+      - homeassistant
