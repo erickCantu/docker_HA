@@ -16,6 +16,10 @@ It is use to run mainly Home Assistant and required containers in my setup.
 The server has grown to more than HA. The following services were added.
 - [Barcode Budy](https://github.com/Forceu/barcodebuddy)
 - [Freshrss](https://freshrss.org)
+    The RSS to Text requires to give permisions to the cache folder. Run in the container terminal:
+    ```bash
+    chmod 777 -R /var/www/html/cache
+    ```
 - [Grocy](https://grocy.info)
 - [Traggo](https://traggo.net)
 
