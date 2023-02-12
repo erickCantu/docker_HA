@@ -236,6 +236,8 @@ services:
       - /media/erick/ftrss/freshrss:/config
     ports:
       - "9289:80"
+    depends_on:
+      - ftrss_mariadb
 
 
   
