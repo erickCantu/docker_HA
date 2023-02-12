@@ -207,7 +207,7 @@ services:
     image: heussd/fivefilters-full-text-rss:latest
     restart: unless-stopped
     env_file:
-      - ftrrs.env
+      - ftrss.env
     volumes:
       - /opt/full_text_rss/:/var/www/html/cache
     ports:
@@ -224,7 +224,7 @@ services:
     ports:
       - "9288:3306"
     depends_on:
-      - ftrss_mariadb
+      - ftrss
 
   freshrss:
     container_name: freshrss
