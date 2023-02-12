@@ -129,6 +129,7 @@ services:
       - homeassistant
 
   esphome:
+    container_name: esphome
     image: esphome/esphome
     volumes:
       - /opt/homeassistant/config/esphome:/config:rw
@@ -139,3 +140,102 @@ services:
       - 6052:6052
     depends_on:
       - homeassistant
+
+  traggo:
+    container_name: traggo
+    image: traggo/server:latest
+    ports:
+      - 3030:3030
+    restart: unless-stopped
+    env_file:
+      - traggo.env
+    volumes:
+      - /opt/traggodata:/opt/traggo/data
+
+  grocy:
+    container_name: grocy
+    image: lscr.io/linuxserver/grocy:latest
+    ports:
+      - 9283:80
+    restart: unless-stopped
+    env_file:
+      - grocy.env
+    volumes:
+      - /opt/grocy:/config
+
+  barcodebudy:
+    container_name: barcodebuddy
+    image: f0rc3/barcodebuddy-docker:latest
+    ports:
+      - 9284:80
+    restart: unless-stopped
+    env_file:
+      - grocy.env
+    volumes:
+      - /opt/barcodebuddydata/:/config
+
+  nc_mariadb:
+    container_name: nc_mariadb
+    image: mariadb/server:latest
+    restart: unless-stopped
+    env_file:
+      - nc_mariadb.env
+    volumes:
+      - /media/erick/nc/nc_mariadb:/var/lib/mysql
+    ports:
+      - "9285:3306"
+
+  nextcloud:
+    container_name: nextcloud
+    image: amd64/nextcloud:stable
+    restart: unless-stopped
+    env_file:
+      - nc.env
+    volumes:
+      - /media/erick/nc/html:/var/www/html
+      - /media/erick/nc/html/data:/var/www/html/data
+    ports:
+      - "9286:80"
+    depends_on:
+      - nc_mariadb
+    links:
+      - nc_mariadb
+    hostname: nc.cannton.sbs
+
+  ftrss:
+    container_name: ft_rss
+    image: heussd/fivefilters-full-text-rss:latest
+    restart: unless-stopped
+    env_file:
+      - ftrrs.env
+    volumes:
+      - /opt/full_text_rss/:/var/www/html/cache
+    ports:
+    - "9287:80"
+      
+  ftrss_mariadb:
+    container_name: ftrss_mariadb
+    image: mariadb/server:latest
+    restart: unless-stopped
+    env_file:
+      - ftrss_mariadb.env
+    volumes:
+      - /media/erick/ftrss/ftrss_mariadb:/var/lib/mysql
+    ports:
+      - "9288:3306"
+    depends_on:
+      - ftrss_mariadb
+
+  freshrss:
+    container_name: freshrss
+    image: lscr.io/linuxserver/freshrss:latest
+    restart: unless-stopped
+    env_file:
+      - freshrss.env
+    volumes:
+      - /media/erick/ftrss/freshrss:/config
+    ports:
+      - "9289:80"
+
+
+  
