@@ -29,3 +29,18 @@ The *"server"* is overkill and at the same time under setup. But, it is hardware
 - Motherboard: Asrock Fatal1ty X370 Gaming K4  
 - SSD: Sandisk 256 GB  
 - HD: Seagate 1T
+
+### Update 20230219
+The Maria database throws the following errors:
+```
+[ERROR] Incorrect definition of table mysql.event: expected column 'definer' at position 3 to have type varchar(, found type char(141).
+
+[ERROR] mariadbd: Event Scheduler: An error occurred when initializing system tables. Disabling the Event Scheduler.
+```
+
+to solve it run in batch:
+```batch
+mariadb-upgrade -u root -p
+```
+it requries the root pwd. 
+
