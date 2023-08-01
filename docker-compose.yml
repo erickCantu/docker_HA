@@ -70,11 +70,11 @@ services:
     volumes:
       - /opt/tasmoadmin/data:/data
     ports:
-      - 9541:9541
+      - 9541:80
   
   mariadb:
     container_name: mariadb
-    image: mariadb/server:latest
+    image: mariadb:latest
     restart: unless-stopped
     env_file:
       - mariadb.env
@@ -165,7 +165,7 @@ services:
 
   barcodebudy:
     container_name: barcodebuddy
-    image: f0rc3/barcodebuddy-docker:latest
+    image: f0rc3/barcodebuddy:latest
     ports:
       - 9284:80
     restart: unless-stopped
@@ -174,70 +174,49 @@ services:
     volumes:
       - /opt/barcodebuddydata/:/config
 
-  nc_mariadb:
-    container_name: nc_mariadb
-    image: mariadb/server:latest
+  nextcloud_mariadb:
+    container_name: nextcloud_mariadb
+    image: mariadb:latest
     restart: unless-stopped
     env_file:
       - nc_mariadb.env
     volumes:
-      - /media/erick/nc/nc_mariadb:/var/lib/mysql
+      - /media/erick/nc/nextcloud_mariadb:/var/lib/mysql
     ports:
       - "9285:3306"
 
   nextcloud:
     container_name: nextcloud
-    image: amd64/nextcloud:stable
+    image: nextcloud:stable
     restart: unless-stopped
     env_file:
       - nc.env
     volumes:
-      - /media/erick/nc/html:/var/www/html
-      - /media/erick/nc/html/data:/var/www/html/data
+      - /media/erick/nc/nextcloud:/var/www/html
+      - /media/erick/nc/nextcloud/data:/var/www/html/data
     ports:
       - "9286:80"
     depends_on:
-      - nc_mariadb
+      - nextcloud_mariadb
     links:
-      - nc_mariadb
-    hostname: nc.cannton.sbs
+      - nextcloud_mariadb
+    hostname: nube.cannton.sbs
 
-  ftrss:
-    container_name: ft_rss
-    image: heussd/fivefilters-full-text-rss:latest
+  uptimeKuma:
+    container_name: uptime-kuma
+    image: louislam/uptime-kuma:latest
     restart: unless-stopped
-    env_file:
-      - ftrss.env
     volumes:
-      - /opt/full_text_rss/:/var/www/html/cache
+      - /opt/uptimeKuma:/app/data
     ports:
-    - "9287:80"
-      
-  ftrss_mariadb:
-    container_name: ftrss_mariadb
-    image: mariadb/server:latest
+      - "3001:3001"
+
+  influxdb:
+    container_name: influxdb
+    image: influxdb:latest
     restart: unless-stopped
-    env_file:
-      - ftrss_mariadb.env
     volumes:
-      - /media/erick/ftrss/ftrss_mariadb:/var/lib/mysql
+      - /media/erick/influxdb/HA_Influx_Volume:/var/lib/influxdb2 \
     ports:
-      - "9288:3306"
-    depends_on:
-      - ftrss
-
-  freshrss:
-    container_name: freshrss
-    image: lscr.io/linuxserver/freshrss:latest
-    restart: unless-stopped
-    env_file:
-      - freshrss.env
-    volumes:
-      - /media/erick/ftrss/freshrss:/config
-    ports:
-      - "9289:80"
-    depends_on:
-      - ftrss_mariadb
-
-
+      - 8086:8086
   
